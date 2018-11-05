@@ -12,3 +12,9 @@ node_modules
 /third_party/py/numpy/numpy_include
 /util/python/python_include
 /util/python/python_lib
+
+*.jpg
+release_models/
+tensorflow_model_server
+tensorflow_serving/servables/tensorflow/opencv2/
+tensorflow_serving/servables/tensorflow/opencv3.4.1_so/

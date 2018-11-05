@@ -17,12 +17,15 @@ limitations under the License.
 
 #include <string>
 #include <utility>
+#include <sys/time.h>
 
 #include "tensorflow/cc/saved_model/loader.h"
 #include "tensorflow/core/lib/core/errors.h"
 #include "tensorflow_serving/core/servable_handle.h"
 #include "tensorflow_serving/servables/tensorflow/predict_util.h"
 #include "tensorflow_serving/servables/tensorflow/util.h"
+
+#include "predict_util_vehicle.h"
 
 namespace tensorflow {
 namespace serving {
@@ -131,10 +134,48 @@ Status TensorflowPredictor::Predict(const RunOptions& run_options,
                                     ServerCore* core,
                                     const PredictRequest& request,
                                     PredictResponse* response) {
+
+  bool use_saved_model_cascade= false;
+  int cascade_flag = -1;
+  for (auto& input : request.inputs()){
+    const string& input_alias = input.first;
+    VLOG(0) << "request.inputs: " << input_alias;
+
+    if (input_alias.compare("cascade_flag") == 0){
+      use_saved_model_cascade = true;
+      Tensor tensor_cascade_flag;
+      tensor_cascade_flag.FromProto(input.second);
+      auto value_cascade_flag = tensor_cascade_flag.tensor<int, 1>();
+      cascade_flag = value_cascade_flag(0);
+    }
+  }
+
+  // predict cascade models
+  if (use_saved_model_cascade){
+    struct timeval tic, toc;    // test speed
+    gettimeofday(&tic, NULL);   // start
+    
+    // vehicle
+    if (cascade_flag == 1){
+      TF_RETURN_IF_ERROR(RunPredictVehicle(run_options, core, request, response));
+    }
+    else{
+      return tensorflow::Status(tensorflow::error::UNKNOWN, "cascade mode is not supported");
+    }
+
+    
+    // test time
+    gettimeofday(&toc, NULL);   // end
+    VLOG(0) << "predict once Elapse: " << ((toc.tv_sec - tic.tv_sec) * 1000000 + (toc.tv_usec - tic.tv_usec)) / 1000 << " ms"; // test speed
+
+    return Status::OK();
+  }
+
   if (!request.has_model_spec()) {
     return tensorflow::Status(tensorflow::error::INVALID_ARGUMENT,
                               "Missing ModelSpec");
   }
+
   if (use_saved_model_) {
     ServableHandle<SavedModelBundle> bundle;
     TF_RETURN_IF_ERROR(core->GetServableHandle(request.model_spec(), &bundle));

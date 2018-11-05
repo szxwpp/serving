@@ -423,6 +423,7 @@ cc_library(
         "//visibility:public",
     ],
     deps = [
+        ":predict_util_vehicle",
         ":predict_util",
         "//tensorflow_serving/apis:predict_proto",
         "//tensorflow_serving/core:servable_handle",
@@ -430,6 +431,40 @@ cc_library(
         "//tensorflow_serving/servables/tensorflow:util",
         "@org_tensorflow//tensorflow/cc/saved_model:loader",
     ],
+)
+
+cc_library(
+    name = "predict_util_vehicle",
+    srcs = ["predict_util_vehicle.cc"],
+    hdrs = ["predict_util_vehicle.h"],
+    visibility = [
+        "//visibility:public",
+        ],
+    deps = [
+        "//tensorflow_serving/apis:predict_proto",
+        "//tensorflow_serving/servables/tensorflow:util",
+        "//tensorflow_serving/util:optional",
+        "//tensorflow_serving/core:servable_handle",
+        "//tensorflow_serving/model_servers:server_core",
+        "@com_google_absl//absl/strings",
+        "@org_tensorflow//tensorflow/cc/saved_model:signature_constants",
+        "@org_tensorflow//tensorflow/contrib/session_bundle",
+        "@org_tensorflow//tensorflow/contrib/session_bundle:signature",
+        "@org_tensorflow//tensorflow/core:lib",
+        "@org_tensorflow//tensorflow/core:protos_all_cc",
+        "@org_tensorflow//tensorflow/cc/saved_model:loader",
+        ":opencv",
+    ],
+)
+
+cc_library(
+    name = "opencv",
+    srcs = ["opencv3.4.1_so/libopencv_imgcodecs.so",
+            "opencv3.4.1_so/libopencv_imgproc.so",
+            "opencv3.4.1_so/libopencv_core.so",
+            ],
+    hdrs = ["opencv2/opencv.hpp"],
+    visibility = ["//visibility:public"],
 )
 
 cc_library(
