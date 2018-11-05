@@ -211,6 +211,7 @@ struct CW_VEHICLE{
   float platedet_coord[4]; //left_top_x, left_top_y, right_bottom_x, right_bottom_y
   float platedet_score;
   float plateenlarge_coord[4]; //platepoint input
+  cv::Rect enlarge_plate_rect;
   float platepoint_coord[8]; //clockwise x,y
   float platepoint_score[4]; //clockwise
   int platerec_id[PLATE_MAX_LENGTH];
@@ -667,7 +668,11 @@ TensorProto GetPlatePointInput(const std::vector<cv::Mat>& origin_image_vec,
       cw_vehicle.plateenlarge_coord[1] = max(0, cw_vehicle.platedet_coord[1] - margin_height);
       cw_vehicle.plateenlarge_coord[2] = min(origin_image.cols, cw_vehicle.platedet_coord[2] + margin_width);
       cw_vehicle.plateenlarge_coord[3] = min(origin_image.rows, cw_vehicle.platedet_coord[3] + margin_height);
-
+      cw_vehicle.enlarge_plate_rect.x = cw_vehicle.plateenlarge_coord[0];
+      cw_vehicle.enlarge_plate_rect.y = cw_vehicle.plateenlarge_coord[1];
+      cw_vehicle.enlarge_plate_rect.width = cw_vehicle.plateenlarge_coord[2] - cw_vehicle.plateenlarge_coord[0];
+      cw_vehicle.enlarge_plate_rect.height = cw_vehicle.plateenlarge_coord[3] - cw_vehicle.plateenlarge_coord[1];    
+      
       VLOG(0) << "plateenlarge_coord: " << cw_vehicle.plateenlarge_coord[0] << ", " << cw_vehicle.plateenlarge_coord[1] << ", " << cw_vehicle.plateenlarge_coord[2] << ", " << cw_vehicle.plateenlarge_coord[3];
 
       //filter by size
@@ -676,14 +681,7 @@ TensorProto GetPlatePointInput(const std::vector<cv::Mat>& origin_image_vec,
       }
       else{
         // get roi
-        cv::Rect roi_rect;     
-        roi_rect.x = cw_vehicle.plateenlarge_coord[0];
-        roi_rect.y = cw_vehicle.plateenlarge_coord[1];
-        roi_rect.width = cw_vehicle.plateenlarge_coord[2] - cw_vehicle.plateenlarge_coord[0];
-        roi_rect.height = cw_vehicle.plateenlarge_coord[3] - cw_vehicle.plateenlarge_coord[1];
-        cv::Mat roi = origin_image(roi_rect);
-
-        // cv::imwrite("roi.jpg", roi);
+        cv::Mat roi = origin_image(cw_vehicle.enlarge_plate_rect);
 
         // resize    
         cv::Mat resize_roi;
@@ -742,10 +740,9 @@ Status PostProcessPlatePoint(const std::vector<cv::Mat>& origin_image_vec,
       //   VLOG(0) << output_coordinates_mapped(valid_count, i);
       // }
 
-      float plate_shape[2] = {cw_vehicle.plateenlarge_coord[2] - cw_vehicle.plateenlarge_coord[0], cw_vehicle.plateenlarge_coord[3] - cw_vehicle.plateenlarge_coord[1]};
-      float offset[2] = {cw_vehicle.plateenlarge_coord[0], cw_vehicle.plateenlarge_coord[1]};
+      float plate_shape[2] = {cw_vehicle.enlarge_plate_rect.width, cw_vehicle.enlarge_plate_rect.height};
       for(int i =0; i < 8; i++){
-        cw_vehicle.platepoint_coord[i] = output_coordinates_mapped(valid_count, i) * plate_shape[i % 2] + offset[i % 2];
+        cw_vehicle.platepoint_coord[i] = output_coordinates_mapped(valid_count, i) * plate_shape[i % 2];
 
         if(i % 2){
           cw_vehicle.platepoint_score[(i - 1) / 2] = output_confidences_mapped(valid_count, (i - 1) / 2);
@@ -780,27 +777,25 @@ TensorProto GetPlateRecognizeInput(const std::vector<cv::Mat>& origin_image_vec,
          cw_vehicle.platepoint_score[2] >= PLATE_POINT_THRESH &&
          cw_vehicle.platepoint_score[3] >= PLATE_POINT_THRESH){
         // correct images, base on enlarge plate image
-        float normal_point_coord[8];
-        for(int i = 0; i < 8; i++){
-          normal_point_coord[i] = cw_vehicle.platepoint_coord[i] - cw_vehicle.plateenlarge_coord[i % 2];
-        }
-        float min_left = min(normal_point_coord[0], normal_point_coord[6]);
-        float min_top = min(normal_point_coord[1], normal_point_coord[3]);
-        float max_right = max(normal_point_coord[2], normal_point_coord[4]);
-        float max_bottom = max(normal_point_coord[5], normal_point_coord[7]);
+        float min_left = min(cw_vehicle.platepoint_coord[0], cw_vehicle.platepoint_coord[6]);
+        float min_top = min(cw_vehicle.platepoint_coord[1], cw_vehicle.platepoint_coord[3]);
+        float max_right = max(cw_vehicle.platepoint_coord[2], cw_vehicle.platepoint_coord[4]);
+        float max_bottom = max(cw_vehicle.platepoint_coord[5], cw_vehicle.platepoint_coord[7]);
         float mid_width = (min_left + max_right) / 2.0;
         float mid_height = (min_top + max_bottom) / 2.0;
-        float point_width = (sqrt(pow((normal_point_coord[2] - normal_point_coord[0]), 2) + pow((normal_point_coord[3] - normal_point_coord[1]), 2)) + 
-                             sqrt(pow((normal_point_coord[4] - normal_point_coord[6]), 2) + pow((normal_point_coord[5] - normal_point_coord[7]), 2)))/ 2;
-        float point_height = (sqrt(pow((normal_point_coord[6] - normal_point_coord[0]), 2) + pow((normal_point_coord[7] - normal_point_coord[1]), 2)) + 
-                              sqrt(pow((normal_point_coord[4] - normal_point_coord[2]), 2) + pow((normal_point_coord[5] - normal_point_coord[3]), 2)))/ 2;
+        float point_width = (sqrt(pow((cw_vehicle.platepoint_coord[2] - cw_vehicle.platepoint_coord[0]), 2) + pow((cw_vehicle.platepoint_coord[3] - cw_vehicle.platepoint_coord[1]), 2)) + 
+                             sqrt(pow((cw_vehicle.platepoint_coord[4] - cw_vehicle.platepoint_coord[6]), 2) + pow((cw_vehicle.platepoint_coord[5] - cw_vehicle.platepoint_coord[7]), 2)))/ 2;
+        float point_height = (sqrt(pow((cw_vehicle.platepoint_coord[6] - cw_vehicle.platepoint_coord[0]), 2) + pow((cw_vehicle.platepoint_coord[7] - cw_vehicle.platepoint_coord[1]), 2)) + 
+                              sqrt(pow((cw_vehicle.platepoint_coord[4] - cw_vehicle.platepoint_coord[2]), 2) + pow((cw_vehicle.platepoint_coord[5] - cw_vehicle.platepoint_coord[3]), 2)))/ 2;
+        
         // VLOG(0) << "point image: " << mid_width << ", " << mid_height << ", " << point_width << ", " << point_height;
+        
         // src points for perspective transform
         cv::Point2f src_points[4] = { 
-          cv::Point2f(normal_point_coord[0], normal_point_coord[1]),
-          cv::Point2f(normal_point_coord[2], normal_point_coord[3]),
-          cv::Point2f(normal_point_coord[4], normal_point_coord[5]),
-          cv::Point2f(normal_point_coord[6], normal_point_coord[7]),
+          cv::Point2f(cw_vehicle.platepoint_coord[0], cw_vehicle.platepoint_coord[1]),
+          cv::Point2f(cw_vehicle.platepoint_coord[2], cw_vehicle.platepoint_coord[3]),
+          cv::Point2f(cw_vehicle.platepoint_coord[4], cw_vehicle.platepoint_coord[5]),
+          cv::Point2f(cw_vehicle.platepoint_coord[6], cw_vehicle.platepoint_coord[7]),
         };
         // dst points
         cv::Point2f dst_points[4] = { 
@@ -809,37 +804,32 @@ TensorProto GetPlateRecognizeInput(const std::vector<cv::Mat>& origin_image_vec,
           cv::Point2f(mid_width + point_width / 2, mid_height + point_height / 2),
           cv::Point2f(mid_width - point_width / 2, mid_height + point_height / 2),
         };
-        for(int i = 0; i < 4; i++){
-          cv::Point2f point = src_points[i];
-          VLOG(0) << "src_point: " << point.x << ", " << point.y;
-          point = dst_points[i];
-          VLOG(0) << "dst_point: " << point.x << ", " << point.y;
-        }
-
         cv::Mat transform_matrix = cv::getPerspectiveTransform(src_points, dst_points);
-         VLOG(0) << "transform_matrix: " << transform_matrix;
+
+        // for(int i = 0; i < 4; i++){
+        //   cv::Point2f point = src_points[i];
+        //   VLOG(0) << "src_point: " << point.x << ", " << point.y;
+        //   point = dst_points[i];
+        //   VLOG(0) << "dst_point: " << point.x << ", " << point.y;
+        // }
+        // VLOG(0) << "transform_matrix: " << transform_matrix;
+
         // get correct image
-        cv::Rect plate_image_rect;     
-        plate_image_rect.x = cw_vehicle.plateenlarge_coord[0];
-        plate_image_rect.y = cw_vehicle.plateenlarge_coord[1];
-        plate_image_rect.width = cw_vehicle.plateenlarge_coord[2] - cw_vehicle.plateenlarge_coord[0];
-        plate_image_rect.height = cw_vehicle.plateenlarge_coord[3] - cw_vehicle.plateenlarge_coord[1];
         cv::Mat origin_image = origin_image_vec[cw_vehicle.batch_id].clone();
-        cv::Mat plate_image = origin_image(plate_image_rect);
+        cv::Mat plate_image = origin_image(cw_vehicle.enlarge_plate_rect);
         cv::Mat correct_image;
-        cv::warpPerspective(plate_image, correct_image, transform_matrix, cv::Size(plate_image_rect.width, plate_image_rect.height));
+        cv::warpPerspective(plate_image, correct_image, transform_matrix, cv::Size(cw_vehicle.enlarge_plate_rect.width, cw_vehicle.enlarge_plate_rect.height));
 
         //get roi and roi_resize
         cv::Rect correct_image_rect;     
         correct_image_rect.x = max(0, floor(mid_width - point_width * (0.5 + PLATE_ENLARGE_WIDTH)));
         correct_image_rect.y = max(0, floor(mid_height - point_height * (0.5 + PLATE_ENLARGE_HEIGHT)));
-        correct_image_rect.width = min(plate_image_rect.width, floor(mid_width + point_width * (0.5 + PLATE_ENLARGE_WIDTH))) - correct_image_rect.x;
-        correct_image_rect.height = min(plate_image_rect.height, floor(mid_height + point_height * (0.5 + PLATE_ENLARGE_HEIGHT))) - correct_image_rect.y;
-
-        VLOG(0) << "correct_image_rect: " << correct_image_rect.x << ", " << correct_image_rect.y << ", " 
-                << correct_image_rect.width + correct_image_rect.x << ", " << correct_image_rect.height + correct_image_rect.y;
-
+        correct_image_rect.width = min(cw_vehicle.enlarge_plate_rect.width, floor(mid_width + point_width * (0.5 + PLATE_ENLARGE_WIDTH))) - correct_image_rect.x;
+        correct_image_rect.height = min(cw_vehicle.enlarge_plate_rect.height, floor(mid_height + point_height * (0.5 + PLATE_ENLARGE_HEIGHT))) - correct_image_rect.y;
         cv::Mat roi = correct_image(correct_image_rect);
+        // VLOG(0) << "correct_image_rect: " << correct_image_rect.x << ", " << correct_image_rect.y << ", " 
+        //         << correct_image_rect.width + correct_image_rect.x << ", " << correct_image_rect.height + correct_image_rect.y;
+        
         // resize    
         cv::Mat resize_roi;
         cv::resize(roi, resize_roi, cv::Size(PLATE_REC_WIDTH, PLATE_REC_HEIGHT));
@@ -902,8 +892,8 @@ Status PostProcessPlateRecognize(const std::vector<cv::Mat>& origin_image_vec,
       for(int i = 0; i < sequence_length; i++){
         origin_indices[i] = output_indices_mapped(valid_count, i);
         origin_confidences[i] = output_confidences_mapped(valid_count, i);
-        VLOG(0) << origin_indices[i];
-        VLOG(0) << origin_confidences[i];
+        // VLOG(0) << origin_indices[i];
+        // VLOG(0) << origin_confidences[i];
       }
       valid_count = valid_count + 1;
 
@@ -1055,7 +1045,6 @@ Status RunPredict(const string model_spec_name,
         "run predict model error: ", model_spec_name));
   }
 
-  VLOG(0) << "run predict end";
   return Status::OK();
 }
 
@@ -1290,10 +1279,6 @@ Status RunPredictVehicle(const RunOptions& run_options,
   GetResponse(vehicle_result_vec, response);
 
   return Status::OK();
-
-  // VLOG(0) << "exit";
-  // return tensorflow::Status(tensorflow::error::UNKNOWN,
-  //                             "test");
 
 }
 
