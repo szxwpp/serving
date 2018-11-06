@@ -751,8 +751,8 @@ Status PostProcessPlatePoint(const std::vector<cv::Mat>& origin_image_vec,
 
       valid_count = valid_count + 1;
 
-      VLOG(0) << "platepoint_coord: " << cw_vehicle.platepoint_coord[0] << ", " << cw_vehicle.platepoint_coord[1] << ", " << cw_vehicle.platepoint_coord[2] << ", " << cw_vehicle.platepoint_coord[3];
-      VLOG(0) << "platepoint_coord: " << cw_vehicle.platepoint_coord[4] << ", " << cw_vehicle.platepoint_coord[5] << ", " << cw_vehicle.platepoint_coord[6] << ", " << cw_vehicle.platepoint_coord[7];
+      VLOG(0) << "platepoint_coord: " << cw_vehicle.platepoint_coord[0] << ", " << cw_vehicle.platepoint_coord[1] << ", " << cw_vehicle.platepoint_coord[2] << ", " << cw_vehicle.platepoint_coord[3]
+              << ", " << cw_vehicle.platepoint_coord[4] << ", " << cw_vehicle.platepoint_coord[5] << ", " << cw_vehicle.platepoint_coord[6] << ", " << cw_vehicle.platepoint_coord[7];
       VLOG(0) << "platepoint_score: " << cw_vehicle.platepoint_score[0] << ", " << cw_vehicle.platepoint_score[1] << ", " << cw_vehicle.platepoint_score[2] << ", " << cw_vehicle.platepoint_score[3];    
     }  
   }
@@ -956,8 +956,8 @@ Status PostProcessPlateRecognize(const std::vector<cv::Mat>& origin_image_vec,
         cw_vehicle.platerec_id[i] = -1;
       }
 
-      VLOG(0) << "platerec_id: " << cw_vehicle.platerec_id[0] << ", " << cw_vehicle.platerec_id[1] << ", " << cw_vehicle.platerec_id[2] << ", " << cw_vehicle.platerec_id[3];
-      VLOG(0) << "platerec_id: " << cw_vehicle.platerec_id[4] << ", " << cw_vehicle.platerec_id[5] << ", " << cw_vehicle.platerec_id[6] << ", " << cw_vehicle.platerec_id[7];
+      VLOG(0) << "platerec_id: " << cw_vehicle.platerec_id[0] << ", " << cw_vehicle.platerec_id[1] << ", " << cw_vehicle.platerec_id[2] << ", " << cw_vehicle.platerec_id[3]
+              << ", " << cw_vehicle.platerec_id[4] << ", " << cw_vehicle.platerec_id[5] << ", " << cw_vehicle.platerec_id[6] << ", " << cw_vehicle.platerec_id[7];
       VLOG(0) << "platerec_score: " << cw_vehicle.platerec_score;
     }
     else{
@@ -1279,8 +1279,6 @@ Status RunPredictVehicle(const RunOptions& run_options,
                                 "car_recognize",
                                 colortype_input_tensorproto,
                                 origin_image_vec, vehicle_result_vec, core, run_options, response));
-
-  VLOG(0) << "GetResponse";
 
   GetResponse(vehicle_result_vec, response);
 
