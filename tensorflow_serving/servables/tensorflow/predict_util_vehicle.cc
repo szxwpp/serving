@@ -32,8 +32,8 @@ limitations under the License.
 #include "tensorflow/cc/saved_model/loader.h"
 #include "tensorflow_serving/core/servable_handle.h"
 
-#define max(a, b) ((a) > (b)) ? (a):(b)
-#define min(a, b) ((a) < (b)) ? (a):(b)
+#define max(a, b) ((a) > (b) ? (a):(b))
+#define min(a, b) ((a) < (b) ? (a):(b))
 #define VEHICLE_DETECT_THRESH 0.5
 #define PLATE_DETECT_THRESH 0.5
 #define PLATE_POINT_THRESH 0.9
@@ -770,12 +770,12 @@ TensorProto GetPlateRecognizeInput(const std::vector<cv::Mat>& origin_image_vec,
   for(int object_id = 0; object_id < vehicle_result_vec.size(); object_id++){
     if(vehicle_result_vec[object_id].has_plate){
       CW_VEHICLE& cw_vehicle = vehicle_result_vec[object_id];
-
       // filter by plate point
       if(cw_vehicle.platepoint_score[0] >= PLATE_POINT_THRESH &&
          cw_vehicle.platepoint_score[1] >= PLATE_POINT_THRESH &&
          cw_vehicle.platepoint_score[2] >= PLATE_POINT_THRESH &&
-         cw_vehicle.platepoint_score[3] >= PLATE_POINT_THRESH){
+         cw_vehicle.platepoint_score[3] >= PLATE_POINT_THRESH)
+      {
         // correct images, base on enlarge plate image
         float min_left = min(cw_vehicle.platepoint_coord[0], cw_vehicle.platepoint_coord[6]);
         float min_top = min(cw_vehicle.platepoint_coord[1], cw_vehicle.platepoint_coord[3]);
@@ -819,6 +819,8 @@ TensorProto GetPlateRecognizeInput(const std::vector<cv::Mat>& origin_image_vec,
         cv::Mat plate_image = origin_image(cw_vehicle.enlarge_plate_rect);
         cv::Mat correct_image;
         cv::warpPerspective(plate_image, correct_image, transform_matrix, cv::Size(cw_vehicle.enlarge_plate_rect.width, cw_vehicle.enlarge_plate_rect.height));
+
+
 
         //get roi and roi_resize
         cv::Rect correct_image_rect;     
@@ -935,14 +937,18 @@ Status PostProcessPlateRecognize(const std::vector<cv::Mat>& origin_image_vec,
       if(province_position == -1){
         province_position = 0;
       }
-      cw_vehicle.platerec_id[0] = indices_without_blank[province_position];
-      cw_vehicle.platerec_score = confidences_without_blank[province_position];
-      int valid_char_count = 1;
-      for(int i = province_position + 1; i < indices_without_blank.size(); i++){
-        if(indices_without_blank[i] >= PLATE_PROVINCE_NUM){
-          cw_vehicle.platerec_id[valid_char_count] = indices_without_blank[i];
-          cw_vehicle.platerec_score *= confidences_without_blank[i];
-          valid_char_count += 1;
+      //get sub sequence
+      int valid_char_count = 0;
+      if(indices_without_blank.size() > 0){
+        cw_vehicle.platerec_id[0] = indices_without_blank[province_position];
+        cw_vehicle.platerec_score = confidences_without_blank[province_position];
+        valid_char_count += 1;
+        for(int i = province_position + 1; i < indices_without_blank.size(); i++){
+          if(indices_without_blank[i] >= PLATE_PROVINCE_NUM){
+            cw_vehicle.platerec_id[valid_char_count] = indices_without_blank[i];
+            cw_vehicle.platerec_score *= confidences_without_blank[i];
+            valid_char_count += 1;
+          }
         }
       }
       // fill with -1 to rest id
@@ -955,9 +961,9 @@ Status PostProcessPlateRecognize(const std::vector<cv::Mat>& origin_image_vec,
       VLOG(0) << "platerec_score: " << cw_vehicle.platerec_score;
     }
     else{
-          // fill with -1 to object without plate
-          for(int i = 0; i < PLATE_MAX_LENGTH; i++){
-            cw_vehicle.platerec_id[i] = -1;
+      // fill with -1 to object without plate
+      for(int i = 0; i < PLATE_MAX_LENGTH; i++){
+        cw_vehicle.platerec_id[i] = -1;
       }
     }
   }
@@ -1227,7 +1233,6 @@ Status RunPredictVehicle(const RunOptions& run_options,
   VLOG(0) << "plate detection!";
   // get input_tensor_proto
   TensorProto platedet_input_tensorproto = GetPlateDetectInput(origin_image_vec, vehicle_result_vec);
-  VLOG(0) << "finish preprecess!";
   //run plate detection
   TF_RETURN_IF_ERROR(RunPredict("cw_plate_detect_models",
                                 "plate_detect",
@@ -1275,6 +1280,7 @@ Status RunPredictVehicle(const RunOptions& run_options,
                                 colortype_input_tensorproto,
                                 origin_image_vec, vehicle_result_vec, core, run_options, response));
 
+  VLOG(0) << "GetResponse";
 
   GetResponse(vehicle_result_vec, response);
 
