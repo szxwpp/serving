@@ -935,39 +935,44 @@ Status PostProcessPlateRecognize(const std::vector<cv::Mat>& origin_image_vec,
         }
       }
       if(province_position == -1){
-        province_position = 0;
-      }
-      //get sub sequence
-      int valid_char_count = 0;
-      if(indices_without_blank.size() > 0){
-        cw_vehicle.platerec_id[0] = indices_without_blank[province_position];
-        cw_vehicle.platerec_score = confidences_without_blank[province_position];
-        valid_char_count += 1;
-        for(int i = province_position + 1; i < indices_without_blank.size(); i++){
-          if(indices_without_blank[i] >= PLATE_PROVINCE_NUM){
-            cw_vehicle.platerec_id[valid_char_count] = indices_without_blank[i];
-            cw_vehicle.platerec_score *= confidences_without_blank[i];
-            valid_char_count += 1;
-          }
-        }
-      }
-      // fill with -1 to rest id if valid_char_count >= 7
-      if(valid_char_count < 7){
+        //no province char
         for(int i = 0; i < PLATE_MAX_LENGTH; i++){
           cw_vehicle.platerec_id[i] = -1;
         }
         cw_vehicle.platerec_score = 0;
       }
       else{
-        for(int i = valid_char_count; i < PLATE_MAX_LENGTH; i++){
-          cw_vehicle.platerec_id[i] = -1;
+        //get sub sequence
+        int valid_char_count = 0;
+        if(indices_without_blank.size() > 0){
+          cw_vehicle.platerec_id[0] = indices_without_blank[province_position];
+          cw_vehicle.platerec_score = confidences_without_blank[province_position];
+          valid_char_count += 1;
+          for(int i = province_position + 1; i < indices_without_blank.size(); i++){
+            if(indices_without_blank[i] >= PLATE_PROVINCE_NUM){
+              cw_vehicle.platerec_id[valid_char_count] = indices_without_blank[i];
+              cw_vehicle.platerec_score *= confidences_without_blank[i];
+              valid_char_count += 1;
+            }
+          }
         }
+        // fill with -1 to rest id if valid_char_count >= 7
+        if(valid_char_count < 7){
+          for(int i = 0; i < PLATE_MAX_LENGTH; i++){
+            cw_vehicle.platerec_id[i] = -1;
+          }
+          cw_vehicle.platerec_score = 0;
+        }
+        else{
+          for(int i = valid_char_count; i < PLATE_MAX_LENGTH; i++){
+            cw_vehicle.platerec_id[i] = -1;
+          }
+        }
+        
+        // VLOG(0) << "platerec_id: " << cw_vehicle.platerec_id[0] << ", " << cw_vehicle.platerec_id[1] << ", " << cw_vehicle.platerec_id[2] << ", " << cw_vehicle.platerec_id[3]
+                // << ", " << cw_vehicle.platerec_id[4] << ", " << cw_vehicle.platerec_id[5] << ", " << cw_vehicle.platerec_id[6] << ", " << cw_vehicle.platerec_id[7];
+        // VLOG(0) << "platerec_score: " << cw_vehicle.platerec_score;
       }
-      
-
-      // VLOG(0) << "platerec_id: " << cw_vehicle.platerec_id[0] << ", " << cw_vehicle.platerec_id[1] << ", " << cw_vehicle.platerec_id[2] << ", " << cw_vehicle.platerec_id[3]
-              // << ", " << cw_vehicle.platerec_id[4] << ", " << cw_vehicle.platerec_id[5] << ", " << cw_vehicle.platerec_id[6] << ", " << cw_vehicle.platerec_id[7];
-      // VLOG(0) << "platerec_score: " << cw_vehicle.platerec_score;
     }
     else{
       // fill with -1 to object without plate
@@ -980,7 +985,6 @@ Status PostProcessPlateRecognize(const std::vector<cv::Mat>& origin_image_vec,
   return Status::OK();
 
 }
-
 
 
 Status RunPredict(const string model_spec_name,
