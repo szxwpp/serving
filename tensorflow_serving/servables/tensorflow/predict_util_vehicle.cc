@@ -342,8 +342,8 @@ Status PostProcessVehicleDetection(const std::vector<cv::Mat>& origin_image_vec,
         cw_vehicle.batch_id = batch_id;
         vehicle_result_vec.push_back(cw_vehicle);
 
-        VLOG(0) << "car_coord: " << cw_vehicle.car_coord[0] << ", " << cw_vehicle.car_coord[1] << ", " << cw_vehicle.car_coord[2] << ", " << cw_vehicle.car_coord[3];
-        VLOG(0) << "car_score: " << cw_vehicle.car_score;
+        // VLOG(0) << "car_coord: " << cw_vehicle.car_coord[0] << ", " << cw_vehicle.car_coord[1] << ", " << cw_vehicle.car_coord[2] << ", " << cw_vehicle.car_coord[3];
+        // VLOG(0) << "car_score: " << cw_vehicle.car_score;
       }   
 
     }
@@ -453,8 +453,8 @@ Status PostProcessVehicleColorType(const std::vector<cv::Mat>& origin_image_vec,
     vehicle_result_vec[batch_id].type_id = output_type_indices_mapped(batch_id, 0);
     vehicle_result_vec[batch_id].type_score = output_type_confidences_mapped(batch_id, 0);
 
-    VLOG(0) << "color_id: " << vehicle_result_vec[batch_id].color_id << " color_score: " << vehicle_result_vec[batch_id].color_score;
-    VLOG(0) << "type_id: " << vehicle_result_vec[batch_id].type_id << " type_score: " << vehicle_result_vec[batch_id].type_score;
+    // VLOG(0) << "color_id: " << vehicle_result_vec[batch_id].color_id << " color_score: " << vehicle_result_vec[batch_id].color_score;
+    // VLOG(0) << "type_id: " << vehicle_result_vec[batch_id].type_id << " type_score: " << vehicle_result_vec[batch_id].type_score;
   }
 
   return Status::OK();
@@ -531,7 +531,7 @@ Status PostProcessVehicleBrand(const std::vector<cv::Mat>& origin_image_vec,
     vehicle_result_vec[batch_id].brand_id = output_indices_mapped(batch_id, 0);
     vehicle_result_vec[batch_id].brand_score = output_confidences_mapped(batch_id, 0);
 
-    VLOG(0) << "brand_id: " << vehicle_result_vec[batch_id].brand_id << " brand_score: " << vehicle_result_vec[batch_id].brand_score;
+    // VLOG(0) << "brand_id: " << vehicle_result_vec[batch_id].brand_id << " brand_score: " << vehicle_result_vec[batch_id].brand_score;
 
   }
 
@@ -635,8 +635,8 @@ Status PostProcessPlateDetection(const std::vector<cv::Mat>& origin_image_vec,
       cw_vehicle.platedet_coord[2] = floor(right_bottom_x * car_width) + car_left_top_x;
       cw_vehicle.platedet_score = output_scores_mapped(object_id, 0);
 
-      VLOG(0) << "platedet_coord: " << cw_vehicle.platedet_coord[0] << ", " << cw_vehicle.platedet_coord[1] << ", " << cw_vehicle.platedet_coord[2] << ", " << cw_vehicle.platedet_coord[3];
-      VLOG(0) << "platedet_score: " << cw_vehicle.platedet_score;
+      // VLOG(0) << "platedet_coord: " << cw_vehicle.platedet_coord[0] << ", " << cw_vehicle.platedet_coord[1] << ", " << cw_vehicle.platedet_coord[2] << ", " << cw_vehicle.platedet_coord[3];
+      // VLOG(0) << "platedet_score: " << cw_vehicle.platedet_score;
     }
     else{
       vehicle_result_vec[object_id].has_plate = false;
@@ -673,7 +673,7 @@ TensorProto GetPlatePointInput(const std::vector<cv::Mat>& origin_image_vec,
       cw_vehicle.enlarge_plate_rect.width = cw_vehicle.plateenlarge_coord[2] - cw_vehicle.plateenlarge_coord[0];
       cw_vehicle.enlarge_plate_rect.height = cw_vehicle.plateenlarge_coord[3] - cw_vehicle.plateenlarge_coord[1];    
       
-      VLOG(0) << "plateenlarge_coord: " << cw_vehicle.plateenlarge_coord[0] << ", " << cw_vehicle.plateenlarge_coord[1] << ", " << cw_vehicle.plateenlarge_coord[2] << ", " << cw_vehicle.plateenlarge_coord[3];
+      // VLOG(0) << "plateenlarge_coord: " << cw_vehicle.plateenlarge_coord[0] << ", " << cw_vehicle.plateenlarge_coord[1] << ", " << cw_vehicle.plateenlarge_coord[2] << ", " << cw_vehicle.plateenlarge_coord[3];
 
       //filter by size
       if((cw_vehicle.plateenlarge_coord[3] - cw_vehicle.plateenlarge_coord[1]) < PLATE_MIN_HEIGHT || (cw_vehicle.plateenlarge_coord[2] - cw_vehicle.plateenlarge_coord[0]) < PLATE_MIN_WIDTH){
@@ -751,9 +751,9 @@ Status PostProcessPlatePoint(const std::vector<cv::Mat>& origin_image_vec,
 
       valid_count = valid_count + 1;
 
-      VLOG(0) << "platepoint_coord: " << cw_vehicle.platepoint_coord[0] << ", " << cw_vehicle.platepoint_coord[1] << ", " << cw_vehicle.platepoint_coord[2] << ", " << cw_vehicle.platepoint_coord[3]
-              << ", " << cw_vehicle.platepoint_coord[4] << ", " << cw_vehicle.platepoint_coord[5] << ", " << cw_vehicle.platepoint_coord[6] << ", " << cw_vehicle.platepoint_coord[7];
-      VLOG(0) << "platepoint_score: " << cw_vehicle.platepoint_score[0] << ", " << cw_vehicle.platepoint_score[1] << ", " << cw_vehicle.platepoint_score[2] << ", " << cw_vehicle.platepoint_score[3];    
+      // VLOG(0) << "platepoint_coord: " << cw_vehicle.platepoint_coord[0] << ", " << cw_vehicle.platepoint_coord[1] << ", " << cw_vehicle.platepoint_coord[2] << ", " << cw_vehicle.platepoint_coord[3]
+              // << ", " << cw_vehicle.platepoint_coord[4] << ", " << cw_vehicle.platepoint_coord[5] << ", " << cw_vehicle.platepoint_coord[6] << ", " << cw_vehicle.platepoint_coord[7];
+      // VLOG(0) << "platepoint_score: " << cw_vehicle.platepoint_score[0] << ", " << cw_vehicle.platepoint_score[1] << ", " << cw_vehicle.platepoint_score[2] << ", " << cw_vehicle.platepoint_score[3];    
     }  
   }
 
@@ -951,14 +951,23 @@ Status PostProcessPlateRecognize(const std::vector<cv::Mat>& origin_image_vec,
           }
         }
       }
-      // fill with -1 to rest id
-      for(int i = valid_char_count; i < PLATE_MAX_LENGTH; i++){
-        cw_vehicle.platerec_id[i] = -1;
+      // fill with -1 to rest id if valid_char_count >= 7
+      if(valid_char_count < 7){
+        for(int i = 0; i < PLATE_MAX_LENGTH; i++){
+          cw_vehicle.platerec_id[i] = -1;
+        }
+        cw_vehicle.platerec_score = 0;
       }
+      else{
+        for(int i = valid_char_count; i < PLATE_MAX_LENGTH; i++){
+          cw_vehicle.platerec_id[i] = -1;
+        }
+      }
+      
 
-      VLOG(0) << "platerec_id: " << cw_vehicle.platerec_id[0] << ", " << cw_vehicle.platerec_id[1] << ", " << cw_vehicle.platerec_id[2] << ", " << cw_vehicle.platerec_id[3]
-              << ", " << cw_vehicle.platerec_id[4] << ", " << cw_vehicle.platerec_id[5] << ", " << cw_vehicle.platerec_id[6] << ", " << cw_vehicle.platerec_id[7];
-      VLOG(0) << "platerec_score: " << cw_vehicle.platerec_score;
+      // VLOG(0) << "platerec_id: " << cw_vehicle.platerec_id[0] << ", " << cw_vehicle.platerec_id[1] << ", " << cw_vehicle.platerec_id[2] << ", " << cw_vehicle.platerec_id[3]
+              // << ", " << cw_vehicle.platerec_id[4] << ", " << cw_vehicle.platerec_id[5] << ", " << cw_vehicle.platerec_id[6] << ", " << cw_vehicle.platerec_id[7];
+      // VLOG(0) << "platerec_score: " << cw_vehicle.platerec_score;
     }
     else{
       // fill with -1 to object without plate
@@ -1055,9 +1064,18 @@ Status RunPredict(const string model_spec_name,
 }
 
 
-void GetResponse(const std::vector<CW_VEHICLE>& vehicle_result_vec,
+void GetResponse(std::vector<CW_VEHICLE>& vehicle_result_vec,
                 PredictResponse* response)
 {
+  // process type and brand, set brand if type in [0 2 3 4 5]
+  for(int object_id = 0; object_id < vehicle_result_vec.size(); object_id++){
+    CW_VEHICLE& cw_vehicle = vehicle_result_vec[object_id];
+    if(cw_vehicle.type_id >= 6 || cw_vehicle.type_id == 1){
+      cw_vehicle.brand_id = -1;
+      cw_vehicle.brand_score = 0;
+    }
+  }
+
   int object_count = vehicle_result_vec.size();
   // prepare data memory
   int *output_batch_id = (int *) malloc(sizeof(int) * object_count);
@@ -1205,6 +1223,20 @@ Status RunPredictVehicle(const RunOptions& run_options,
                          ServerCore* core,
                          const PredictRequest& request, PredictResponse* response) 
 {
+  // validate model_spec_name and signature_name
+  const string model_spec_name = request.model_spec().name();
+  if(model_spec_name.compare("cw_common_detect_models") !=0){
+    return errors::FailedPrecondition(strings::StrCat(
+        "Serving model_spec_name \"", model_spec_name, "\" not found."));
+  }
+  const string signature_name = request.model_spec().signature_name().empty()
+                                  ? kDefaultServingSignatureDefKey
+                                  : request.model_spec().signature_name();
+  if(signature_name.compare("common_detect") != 0){
+    return errors::FailedPrecondition(strings::StrCat(
+        "Serving signature key \"", signature_name, "\" not found."));
+  }
+
   VLOG(0) << "predict vehicle!";
   std::vector<CW_VEHICLE> vehicle_result_vec;
 
